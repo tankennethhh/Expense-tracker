@@ -3,5 +3,5 @@ git init
 git add .
 git commit -m "Initial expense tracker"
 # Create a repo on github.com, then:
-git remote add origin https://github.com/YOUR_USERNAME/expense-tracker.git
+git remote add origin https://github.com/tankennethhh/expense-tracker.git
 git push -u origin main
