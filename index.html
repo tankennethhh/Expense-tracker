@@ -148,19 +148,25 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 
 function drawBar(id,labels,vals,color,horizontal=false){
-  setTimeout(()=>{
-    destroyChart(id);const el=document.getElementById(id);if(!el)return;
-    charts[id]=new Chart(el,{type:'bar',
-      data:{labels,datasets:[{data:vals,backgroundColor:color,borderRadius:5,borderSkipped:false}]},
-      options:{responsive:true,maintainAspectRatio:false,indexAxis:horizontal?'y':'x',
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`S$${(horizontal?c.parsed.x:c.parsed.y).toFixed(2)}`}}},
-        scales:{
-          x:{grid:horizontal?{color:'rgba(0,0,0,0.05)'}:{display:false},ticks:{color:'#888',font:{size:11},autoSkip:false,maxRotation:30,callback:horizontal?v=>'S$'+v:undefined}},
-          y:{grid:horizontal?{display:false}:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888',font:{size:11},callback:horizontal?undefined:v=>'S$'+v}}
-        }
+  // v2 — always destroy synchronously before creating
+  destroyChart(id);
+  const el=document.getElementById(id);
+  if(!el)return;
+  // Replace canvas to fully clear any lingering Chart.js state
+  const parent=el.parentNode;
+  const newCanvas=document.createElement('canvas');
+  newCanvas.id=id;newCanvas.setAttribute('aria-label',el.getAttribute('aria-label')||'');
+  parent.replaceChild(newCanvas,el);
+  charts[id]=new Chart(newCanvas,{type:'bar',
+    data:{labels,datasets:[{data:vals,backgroundColor:color,borderRadius:5,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:horizontal?'y':'x',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`S$${(horizontal?c.parsed.x:c.parsed.y).toFixed(2)}`}}},
+      scales:{
+        x:{grid:horizontal?{color:'rgba(0,0,0,0.05)'}:{display:false},ticks:{color:'#888',font:{size:11},autoSkip:false,maxRotation:30,callback:horizontal?v=>'S$'+v:undefined}},
+        y:{grid:horizontal?{display:false}:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888',font:{size:11},callback:horizontal?undefined:v=>'S$'+v}}
       }
-    });
-  },80);
+    }
+  });
 }
 
 function drawDonut(id,items,onClickCat){
@@ -168,18 +174,20 @@ function drawDonut(id,items,onClickCat){
   const cats=Object.keys(totals).sort((a,b)=>totals[b]-totals[a]);
   const vals=cats.map(c=>parseFloat(totals[c].toFixed(2)));
   const cols=cats.map(c=>CC[c]||'#888');
-  setTimeout(()=>{
-    destroyChart(id);const el=document.getElementById(id);if(!el)return;
-    charts[id]=new Chart(el,{type:'doughnut',
-      data:{labels:cats,datasets:[{data:vals,backgroundColor:cols,borderWidth:2,borderColor:'rgba(0,0,0,0.05)',hoverOffset:6}]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: S$${c.parsed.toFixed(2)}`}}},
-        onClick:(evt,elements)=>{
-          if(elements.length>0){const cat=cats[elements[0].index];onClickCat(cat);}
-        }
+  destroyChart(id);
+  const el=document.getElementById(id);if(!el)return;
+  const parent=el.parentNode;const newCanvas=document.createElement('canvas');
+  newCanvas.id=id;newCanvas.style.cursor='pointer';
+  parent.replaceChild(newCanvas,el);
+  charts[id]=new Chart(newCanvas,{type:'doughnut',
+    data:{labels:cats,datasets:[{data:vals,backgroundColor:cols,borderWidth:2,borderColor:'rgba(0,0,0,0.05)',hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: S$${c.parsed.toFixed(2)}`}}},
+      onClick:(evt,elements)=>{
+        if(elements.length>0){const cat=cats[elements[0].index];onClickCat(cat);}
       }
-    });
-  },80);
+    }
+  });
 }
 
 // ── Helpers ──
