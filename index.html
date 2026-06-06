@@ -160,8 +160,8 @@ function drawBar(id,labels,vals,color,horizontal=false){
       options:{responsive:true,maintainAspectRatio:false,indexAxis:horizontal?'y':'x',
         plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`S$${(horizontal?c.parsed.x:c.parsed.y).toFixed(2)}`}}},
         scales:{
-          x:{grid:horizontal?{color:'rgba(0,0,0,0.05)'}:{display:false},ticks:{color:'#888',font:{size:11},autoSkip:false,maxRotation:30,callback:horizontal?v=>'S$'+v:undefined}},
-          y:{grid:horizontal?{display:false}:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888',font:{size:11},callback:horizontal?undefined:v=>'S$'+v}}
+          x:{type:horizontal?'linear':'category',grid:horizontal?{color:'rgba(0,0,0,0.05)'}:{display:false},ticks:{color:'#888',font:{size:11},autoSkip:false,maxRotation:30,callback:horizontal?v=>'S$'+v:undefined}},
+          y:{type:horizontal?'category':'linear',grid:horizontal?{display:false}:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888',font:{size:11},callback:horizontal?undefined:v=>'S$'+v}}
         }
       }
     });
