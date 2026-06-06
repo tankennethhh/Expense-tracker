@@ -126,6 +126,8 @@ let data=[], view='ov', tab='dash', selMonth=null, selWeek=null, editId=null;
 // Search state — keywords stored as array, input as live string
 let sqInput='', sqTags=[], sCat='', sFrom='', sTo='', sSort='date-desc';
 let loading=false, error=null;
+let pendingChart=null;
+let pendingDonuts=[];
 // Donut click state — which category is selected per donut id
 let donutSel={};
 const charts={};
@@ -261,7 +263,7 @@ function donutHtml(id,items){
   const sum=vals.reduce((s,v)=>s+v,0);
   const sel=donutSel[id]||null;
   const legend=cats.map((c,i)=>`<span class="${sel===c?'active':''}" onclick="handleDonutClick('${id}','${c}')" title="Click to filter"><span class="donut-dot" style="background:${CC[c]||'#888'}"></span>${c} ${Math.round(vals[i]/sum*100)}%</span>`).join('');
-  drawDonut(id,items,cat=>handleDonutClick(id,cat));
+  pendingDonuts.push({id,items,cb:cat=>handleDonutClick(id,cat)});
 
   // If a category is selected, show its transactions below the donut
   let catPanel='';
@@ -469,8 +471,7 @@ function renderOverview(){
       <div><div class="st">Recent · <span style="font-weight:400;text-transform:none;letter-spacing:0">tap <i class="ti ti-edit" style="font-size:11px"></i> to edit</span></div>${txList(data,8,true)}</div>
     </div>
     ${addForm()}`;
-  // Monthly bar: x-axis = "Feb 2026" labels
-  drawBar('obc',mTotals.map(x=>x.label),mTotals.map(x=>parseFloat(x.total.toFixed(2))),'#3266ad');
+  pendingChart={fn:()=>drawBar('obc',mTotals.map(x=>x.label),mTotals.map(x=>parseFloat(x.total.toFixed(2))),'#3266ad')};
   return html;
 }
 
@@ -495,8 +496,7 @@ function renderMonth(){
       <div><div class="st">All transactions</div>${txList(mData,null,true)}</div>
     </div>
     ${addForm()}`;
-  // Weekly bar: x-axis = "1–7 Feb" labels
-  drawBar('wbc',wTotals.map(x=>x.label),wTotals.map(x=>parseFloat(x.total.toFixed(2))),'#1D9E75');
+  pendingChart={fn:()=>drawBar('wbc',wTotals.map(x=>x.label),wTotals.map(x=>parseFloat(x.total.toFixed(2))),'#1D9E75')};
   return html;
 }
 
@@ -526,7 +526,7 @@ function renderWeek(){
     </div>
     ${addForm()}`;
   // Horizontal bar: y-axis = "Mon 7 Feb"
-  drawBar('dbc',dayLabels,dTotals.map(x=>parseFloat(x.total.toFixed(2))),'#7F77DD',true);
+  pendingChart={fn:()=>drawBar('dbc',dayLabels,dTotals.map(x=>parseFloat(x.total.toFixed(2))),'#7F77DD',true)};
   return html;
 }
 
@@ -573,11 +573,17 @@ function render(){
   if(error){app.innerHTML=`<div class="error-banner"><i class="ti ti-alert-circle"></i> ${error}</div>`;return;}
   const tabs=renderTabs();
   let body='';
+  pendingChart=null;
+  pendingDonuts=[];
   if(tab==='search')body=renderSearch();
   else if(view==='ov')body=renderOverview();
   else if(view==='mo')body=renderMonth();
   else body=renderWeek();
   app.innerHTML=tabs+body;
+  // Fire chart draws AFTER innerHTML is set so canvas elements exist in DOM
+  if(pendingChart)pendingChart.fn();
+  pendingDonuts.forEach(d=>drawDonut(d.id,d.items,d.cb));
+  pendingDonuts=[];
 }
 
 loadData();
