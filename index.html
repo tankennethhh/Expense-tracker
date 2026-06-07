@@ -155,32 +155,27 @@ function drawBar(id,labels,vals,color,horizontal=false){
     const el=document.getElementById(id);if(!el)return;
     const parent=el.parentNode;
     const newCanvas=document.createElement('canvas');
-    newCanvas.id=id;newCanvas.setAttribute('aria-label',el.getAttribute('aria-label')||'');
+    newCanvas.id=id;
     parent.replaceChild(newCanvas,el);
-    // Use two completely separate configs to avoid any dynamic axis type confusion
-    const cfg=horizontal?{
-      type:'bar',
-      data:{labels,datasets:[{data:vals,backgroundColor:color,borderRadius:5,borderSkipped:false}]},
-      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`S$${c.parsed.x.toFixed(2)}`}}},
-        scales:{
-          x:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888',font:{size:11},callback:v=>'S$'+v}},
-          y:{grid:{display:false},ticks:{color:'#888',font:{size:11}}}
+    if(horizontal){
+      charts[id]=new Chart(newCanvas,{
+        type:'bar',
+        data:{labels:labels,datasets:[{data:vals,backgroundColor:color,borderRadius:5,borderSkipped:false}]},
+        options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'S$'+c.parsed.x.toFixed(2)}}},
+          scales:{x:{ticks:{color:'#888',callback:v=>'S$'+v}},y:{ticks:{color:'#888'}}}
         }
-      }
-    }:{
-      type:'bar',
-      data:{labels,datasets:[{data:vals,backgroundColor:color,borderRadius:5,borderSkipped:false}]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`S$${c.parsed.y.toFixed(2)}`}}},
-        scales:{
-          x:{grid:{display:false},ticks:{color:'#888',font:{size:11},autoSkip:false,maxRotation:30}},
-          y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888',font:{size:11},callback:v=>'S$'+v}}
+      });
+    } else {
+      charts[id]=new Chart(newCanvas,{
+        type:'bar',
+        data:{labels:labels,datasets:[{data:vals,backgroundColor:color,borderRadius:5,borderSkipped:false}]},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'S$'+c.parsed.y.toFixed(2)}}},
+          scales:{x:{ticks:{color:'#888',maxRotation:30}},y:{ticks:{color:'#888',callback:v=>'S$'+v}}}
         }
-      }
-    };
-    console.log('[drawBar]', id, 'labels:', labels, 'vals:', vals);
-    charts[id]=new Chart(newCanvas,cfg);
+      });
+    }
   },80);
 }
 
