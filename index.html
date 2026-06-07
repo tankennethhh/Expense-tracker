@@ -179,6 +179,7 @@ function drawBar(id,labels,vals,color,horizontal=false){
         }
       }
     };
+    console.log('[drawBar]', id, 'labels:', labels, 'vals:', vals);
     charts[id]=new Chart(newCanvas,cfg);
   },80);
 }
@@ -484,7 +485,9 @@ function renderOverview(){
       <div><div class="st">Recent · <span style="font-weight:400;text-transform:none;letter-spacing:0">tap <i class="ti ti-edit" style="font-size:11px"></i> to edit</span></div>${txList(data,8,true)}</div>
     </div>
     ${addForm()}`;
-  pendingChart={fn:()=>drawBar('obc',mTotals.map(x=>x.label),mTotals.map(x=>parseFloat(x.total.toFixed(2))),'#3266ad')};
+  const _obcLabels=mTotals.map(x=>x.label);
+  const _obcVals=mTotals.map(x=>parseFloat(x.total.toFixed(2)));
+  pendingChart={fn:()=>drawBar('obc',_obcLabels,_obcVals,'#3266ad')};
   return html;
 }
 
@@ -509,7 +512,9 @@ function renderMonth(){
       <div><div class="st">All transactions</div>${txList(mData,null,true)}</div>
     </div>
     ${addForm()}`;
-  pendingChart={fn:()=>drawBar('wbc',wTotals.map(x=>x.label),wTotals.map(x=>parseFloat(x.total.toFixed(2))),'#1D9E75')};
+  const _wbcLabels=wTotals.map(x=>x.label);
+  const _wbcVals=wTotals.map(x=>parseFloat(x.total.toFixed(2)));
+  pendingChart={fn:()=>drawBar('wbc',_wbcLabels,_wbcVals,'#1D9E75')};
   return html;
 }
 
@@ -539,7 +544,9 @@ function renderWeek(){
     </div>
     ${addForm()}`;
   // Horizontal bar: y-axis = "Mon 7 Feb"
-  pendingChart={fn:()=>drawBar('dbc',dayLabels,dTotals.map(x=>parseFloat(x.total.toFixed(2))),'#7F77DD',true)};
+  const _dbcLabels=[...dayLabels];
+  const _dbcVals=dTotals.map(x=>parseFloat(x.total.toFixed(2)));
+  pendingChart={fn:()=>drawBar('dbc',_dbcLabels,_dbcVals,'#7F77DD',true)};
   return html;
 }
 
